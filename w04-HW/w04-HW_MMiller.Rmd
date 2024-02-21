@@ -1,0 +1,164 @@
+---
+title: "STA 533 Homework 4"
+author: "Melanie Miller"
+date: "West Chester University"
+output: 
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: true
+    theme: lumen
+editor_options:
+  chunk_output_type: inline
+---
+
+
+<style type="text/css">
+
+/* Table of content - navigation */
+div#TOC li {
+    list-style:none;
+    background-color:lightgray;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #780c0c;
+}
+
+
+/* Title fonts */
+h1.title {
+  font-size: 24px;
+  color: darkblue;
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-variant-caps: normal;
+}
+h4.author { 
+  font-size: 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: navy;
+  text-align: center;
+}
+h4.date { 
+  font-size: 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: darkblue;
+  text-align: center;
+}
+
+/* Section headers */
+h1 {
+    font-size: 22px;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+h2 {
+    font-size: 18px;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h3 { 
+    font-size: 15px;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+h4 {
+    font-size: 18px;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# code chunk specifies whether the R code, warnings, and output 
+# will be included in the output files.
+if (!require("tidyverse")) {
+   install.packages("tidyverse")
+   library(tidyverse)
+}
+if (!require("knitr")) {
+   install.packages("knitr")
+   library(knitr)
+}
+if (!require("jpeg")) {
+   install.packages("jpeg", dependencies = TRUE)
+   library(jpeg)
+}
+
+if (!require("RCurl")) {
+   install.packages("RCurl", dependencies = TRUE)
+   library(RCurl)
+}
+
+
+knitr::opts_chunk$set(echo = TRUE,       
+                      warning = FALSE,   
+                      result = TRUE,   
+                      message = FALSE,
+                      comment = NA)
+```
+
+
+
+# Introduction
+In the following analysis, the Penguins data set was used. This data set was modified to only include Adelie and Gentoo penguin species that are located on either the Torgersen or Biscoe islands, and have a body mass between 3500 and 5000 g. After subsetting the data based on these criteria, there are 6 variables and 111 observations. 
+
+
+```{r Data Cleaning}
+data4<-read.csv(url("https://melaniemiller1.github.io/STA533/w03-HW/w03-penguins.csv"))
+data4new <- na.omit(data4) #Removes all obs with missing data
+data4new<- filter(data4new, species== "Adelie" | species== "Gentoo",
+                  island== "Torgersen" | island== "Biscoe",
+                  body_mass_g<5000 & body_mass_g>3500)
+BMI<-data4new$body_mass_g/4000
+data4new<-cbind(data4new, BMI)
+data4new= select(data4new, -X, -sex, -year, -body_mass_g)
+```
+
+
+
+# Scatter Plot of Bill Length vs Flipper Length
+```{r}
+bill.length = data4new$bill_length_mm
+flipper.length = data4new$flipper_length_mm
+BMI.size = data4new$BMI
+species = data4new$species
+
+## identifying the ID
+Adelie.id = which(data4new$species=="Adelie")
+Gentoo.id = which(data4new$species=="Gentoo")
+
+## color code
+ col.code = c(alpha("purple",0.5),alpha("cyan",0.5))
+## making an empty plot: type = "n" ==> no point
+
+plot(bill.length, flipper.length, main = "Bill Length vs Flipper Length", type = "n", 
+     xlab="Bill Length (mm)", ylab="Flipper Length (mm)")
+
+## change the point size based on their average of bill length and flipper length
+points(bill.length[Adelie.id], flipper.length[Adelie.id], 
+       pch = 19, col = "purple", cex = BMI.size[Adelie.id])
+
+points(bill.length[Gentoo.id], flipper.length[Gentoo.id], 
+       pch = 19, col = "cyan", cex = BMI.size[Gentoo.id])
+legend("topleft", c("Adelie", "Gentoo"), 
+                  col=c("purple", "cyan"),
+                  pch=c(19, 19))
+
+```
+
+The scatter plot shows clear size differences between the Adelie and Gentoo penguins. From the clusters and point sizes we can see that Gentoo penguins tend to be larger than Adelie penguins. For the Gentoo penguins, majority of the sample's bill length lies between 45 and 50 mm while the Adelie tend to be closer to the 35 to 40 mm range. On the same trend, the Gentoo flipper lengths tend to lie within 205 to 220 mm while the Adelie tend to be in the 180 to 200 mm range. Based on this visual, it appears there may be some outliers in the Adelie penguins that tend to be on the larger side, entering the common ranges of the Gentoo penguins, however there are not as many Gentoo penguins that tend to be as small as the Adelie penguins. 
