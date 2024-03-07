@@ -1,0 +1,258 @@
+---
+title: "STA 533 Homework 6"
+author: "Melanie Miller"
+date: "West Chester University"
+output: 
+  html_document:
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: true
+    theme: lumen
+editor_options:
+  chunk_output_type: inline
+---
+
+
+<style type="text/css">
+
+/* Table of content - navigation */
+div#TOC li {
+    list-style:none;
+    background-color:lightgray;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #780c0c;
+}
+
+
+/* Title fonts */
+h1.title {
+  font-size: 24px;
+  color: darkblue;
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-variant-caps: normal;
+}
+h4.author { 
+  font-size: 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: navy;
+  text-align: center;
+}
+h4.date { 
+  font-size: 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: darkblue;
+  text-align: center;
+}
+
+/* Section headers */
+h1 {
+    font-size: 22px;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+h2 {
+    font-size: 18px;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h3 { 
+    font-size: 15px;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+h4 {
+    font-size: 18px;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+# code chunk specifies whether the R code, warnings, and output 
+# will be included in the output files.
+if (!require("tidyverse")) {
+   install.packages("tidyverse")
+   library(tidyverse)
+}
+if (!require("knitr")) {
+   install.packages("knitr")
+   library(knitr)
+}
+if (!require("jpeg")) {
+   install.packages("jpeg", dependencies = TRUE)
+   library(jpeg)
+}
+
+if (!require("RCurl")) {
+   install.packages("RCurl", dependencies = TRUE)
+   library(RCurl)
+}
+
+if (!require("plotly")) {
+   install.packages("plotly", dependencies = TRUE)
+   library(plotly)
+}
+
+knitr::opts_chunk$set(echo = TRUE,       
+                      warning = FALSE,   
+                      result = TRUE,   
+                      message = FALSE,
+                      comment = NA)
+```
+
+# Introduction
+The following analysis looks at the combined data set created that includes information from income per person, life expectancy, countries total, and population information. This analysis looks only at the values in the year 2015 and an interactive scatter plot was created to show the relationship between life expectancy and income, as well as give some additional information on each point in the plot. 
+
+
+# Data Preparation
+
+Importing the data:
+```{r Data Import}
+completed_data<-read.csv(url("https://melaniemiller1.github.io/STA533/w05-HW/final_data.csv"))
+```
+
+
+Subsetting the data to only the year 2015:
+```{r}
+data2015 <- completed_data %>%
+             filter(Year == 2015)
+```
+
+
+# Interactive Scatter Plot of Expectancy vs Income
+
+```{r}
+plot_ly(
+    data = data2015,
+    x = ~Expectancy,  # Horizontal axis 
+    y = ~Income,   # Vertical axis 
+    color = ~factor(region),  # must be a numeric factor
+    text = ~paste("Population: ", Population,
+                   "<br>Country: ", region), 
+     ## using the following hovertemplate() to add the information of the
+     ## Two numerical variables to the hover text.
+     ### Use the following hover template to display more information
+     hovertemplate = paste('<b>%{text}</b>'),
+     alpha  = 0.6,
+     marker = list(size = ~Population/30000000, sizeref = .05, sizemode = 'area' ),
+     type = "scatter",
+     mode = "markers",
+     ## graphic size
+     width = 700,
+     height = 500
+   ) %>%
+    layout(  
+      ### Title 
+      title =list(text = "Income vs Life Expectancy", 
+                  font = list(family = "Times New Roman",  # HTML font family  
+                                size = 18,
+                               color = "black")), 
+      ### legend
+      legend = list(title = list(text = "Region",
+                                 font = list(family = "Courier New",
+                                               size = 14,
+                                              color = "green")),
+                    bgcolor = "ivory",
+                    groupclick = "togglegroup",  # one of  "toggleitem" AND "togglegroup".
+                    orientation = "v"  # Sets the orientation of the legend.
+                    ),
+      ## margin of the plot
+      margin = list(
+              b = 100,
+              l = 100,
+              t = 100,
+              r = 50
+      ),
+      ## Background
+      plot_bgcolor ='#f7f7f7', 
+      ## Axes labels
+             xaxis = list( 
+                    title=list(text = "Expectancy",
+                               font = list(family = 'Arial')),
+                    zerolinewidth = 2, 
+                    gridcolor = 'white'), 
+            yaxis = list( 
+                    title=list(text = "Income",
+                               font = list(family = 'Arial')),
+                    zerolinewidth = 2, 
+                    gridcolor = 'white')
+
+    )
+
+```
+
+
+This plot shows the relationship between expectancy and income. The size of the points are reflective of the population size, and the colors correspond to the different countries. Hovering over each point you will be able to see the country and the population size.Trends show that as expectancy increases, so does income. 
+
+
+# Animated Scatter Plot (optional)
+```{r}
+pal.IBM <- c("#332288", "#117733", "#0072B2","#D55E00", "#882255")
+pal.IBM <- setNames(pal.IBM, c("Asia", "Europe", "Africa", "Americas", "Oceania"))
+
+df <- completed_data 
+fig <- df %>%
+  plot_ly(
+    x = ~Expectancy, 
+    y = ~Income, 
+    size = ~Population,
+    color = ~region, 
+    colors = pal.IBM,   # custom colors
+    #marker = list(size = ~(log(pop)-10),  sizemode = 'area'),
+    frame = ~Year,      # the time variable to
+    # to display in the hover
+    text = ~paste("Country:", region,
+                  "<br>Pop:", Population),
+    hoverinfo = "text",
+    type = 'scatter',
+    mode = 'markers'
+  )%>%
+    layout(  
+      ### Title 
+      title =list(text = "Income vs Life Expectancy", 
+                  font = list(family = "Times New Roman",  # HTML font family  
+                                size = 18,
+                               color = "black")), 
+      ### legend
+      legend = list(title = list(text = "Region",
+                                 font = list(family = "Courier New",
+                                               size = 14,
+                                              color = "green")),
+                    bgcolor = "ivory",
+                    groupclick = "togglegroup",  # one of  "toggleitem" AND "togglegroup".
+                    orientation = "v"  # Sets the orientation of the legend.
+                    ),
+           ## Background
+      plot_bgcolor ='#f7f7f7', 
+      ## Axes labels
+             xaxis = list( 
+                    title=list(text = "Expectancy",
+                               font = list(family = 'Arial')),
+                    zerolinewidth = 2, 
+                    gridcolor = 'white'), 
+            yaxis = list( 
+                    title=list(text = "Income",
+                               font = list(family = 'Arial')),
+                    zerolinewidth = 2, 
+                    gridcolor = 'white'))
+
+fig
+```
+
+This animated plot shows the changes of the relationship bewteen income and life expectancy over time. This plot shows the trend of as the years go by, life expectancy eventually begins to increase, as well as income. 
